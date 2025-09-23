@@ -34,11 +34,12 @@
     </tbody>
 </table>
 
+
 <pre id="result"></pre>
 
 <script>
 function fetchDiff(base, target, type) {
-    let url = type === 'schema'
+    let url = type === 'data'
         ? `/schema-diff?base=${base}&target=${target}`
         : `/data-diff?base=${base}&target=${target}&table=users`; // example
     fetch(url)

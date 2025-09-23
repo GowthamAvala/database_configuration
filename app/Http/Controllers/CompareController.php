@@ -7,19 +7,37 @@ use Illuminate\Http\Request;
 
 class CompareController extends Controller
 {
-    private $compareService;
+    private $dbCompareService;
 
     public function __construct(DatabaseCompareService $service)
     {
-        $this->compareService = $service;
+        $this->dbCompareService = $service;
     }
 
     public function schemaDiff(Request $request)
     {
+        dd('hI');
         $base = $request->get('base');
         $target = $request->get('target');
-        $diffs = $this->compareService->compareSchemas($base, $target);
-        return response()->json($diffs);
+        $tables = $request->get('tables');  // comma-separated list from frontend
+
+        if ($tables) {
+            $tables = explode(',', $tables); // convert to array
+        } else {
+            $tables = []; // empty = compare all tables
+        }
+
+        try {
+            $diffs = $this->dbCompareService->compareSchemas($base, $target, $tables);
+            return response()->json([
+                'success' => true,
+                'diff' => $diffs,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function dataDiff(Request $request)
@@ -27,7 +45,13 @@ class CompareController extends Controller
         $base = $request->get('base');
         $target = $request->get('target');
         $table = $request->get('table');
-        $diffs = $this->compareService->compareData($base, $target, $table);
+        try {
+        $diffs = $this->dbCompareService->compareData($base, $target, $table);
         return response()->json($diffs);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+        ], 500);
+    }
     }
 }

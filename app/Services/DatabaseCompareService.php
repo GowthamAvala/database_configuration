@@ -6,49 +6,81 @@ use Illuminate\Support\Facades\DB;
 
 class DatabaseCompareService
 {
-    public function compareSchemas($baseConnection, $targetConnection)
-    {
-        $baseTables = DB::connection($baseConnection)
-            ->select("SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE 
-                      FROM INFORMATION_SCHEMA.COLUMNS 
-                      WHERE TABLE_SCHEMA = DATABASE()");
+   public function compareSchemas($baseConnection, $targetConnection, $tables = [])
+{
+    // Get actual database names from config
+    $baseDb = config("database.connections.$baseConnection.database");
+    $targetDb = config("database.connections.$targetConnection.database");
 
-        $targetTables = DB::connection($targetConnection)
-            ->select("SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE 
-                      FROM INFORMATION_SCHEMA.COLUMNS 
-                      WHERE TABLE_SCHEMA = DATABASE()");
+    // Base query for INFORMATION_SCHEMA
+    $baseQuery = "SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE 
+                  FROM INFORMATION_SCHEMA.COLUMNS 
+                  WHERE TABLE_SCHEMA = ?";
 
-        $baseMap = $this->mapColumns($baseTables);
-        $targetMap = $this->mapColumns($targetTables);
+    $targetQuery = "SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = ?";
 
-        $diffQueries = [];
-
-        foreach ($baseMap as $table => $columns) {
-            if (!isset($targetMap[$table])) {
-                $diffQueries[] = "CREATE TABLE `$table` (...)";
-                continue;
-            }
-
-            foreach ($columns as $col => $type) {
-                if (!isset($targetMap[$table][$col])) {
-                    $diffQueries[] = "ALTER TABLE `$table` ADD `$col` $type;";
-                } elseif ($targetMap[$table][$col] !== $type) {
-                    $diffQueries[] = "ALTER TABLE `$table` MODIFY `$col` $type;";
-                }
-            }
-        }
-
-        return $diffQueries;
+    // If specific tables are provided, filter them
+    if (!empty($tables)) {
+        $tableList = "'" . implode("','", $tables) . "'";
+        $baseQuery .= " AND TABLE_NAME IN ($tableList)";
+        $targetQuery .= " AND TABLE_NAME IN ($tableList)";
     }
 
-    private function mapColumns($rows)
-    {
-        $map = [];
-        foreach ($rows as $row) {
-            $map[$row->TABLE_NAME][$row->COLUMN_NAME] = $row->COLUMN_TYPE;
+    // Fetch columns from both databases
+    $baseTables = DB::connection($baseConnection)->select($baseQuery, [$baseDb]);
+    $targetTables = DB::connection($targetConnection)->select($targetQuery, [$targetDb]);
+
+    // Map tables to columns for easier comparison
+    $baseMap = $this->mapColumns($baseTables);
+    $targetMap = $this->mapColumns($targetTables);
+
+    $diffQueries = [];
+
+    // Compare base -> target
+    foreach ($baseMap as $table => $columns) {
+        // Table missing in target
+        if (!isset($targetMap[$table])) {
+            $diffQueries[] = "CREATE TABLE `$table` (...)"; // you can enhance with full create statement if needed
+            continue;
         }
-        return $map;
+
+        // Compare columns
+        foreach ($columns as $col => $type) {
+            if (!isset($targetMap[$table][$col])) {
+                $diffQueries[] = "ALTER TABLE `$table` ADD `$col` $type;";
+            } elseif ($targetMap[$table][$col] !== $type) {
+                $diffQueries[] = "ALTER TABLE `$table` MODIFY `$col` $type;";
+            }
+        }
     }
+
+    // Optional: Detect columns in target not in base (reverse diff)
+    foreach ($targetMap as $table => $columns) {
+        if (!isset($baseMap[$table])) continue;
+        foreach ($columns as $col => $type) {
+            if (!isset($baseMap[$table][$col])) {
+                $diffQueries[] = "-- Column `$col` exists in target `$table` but not in base";
+            }
+        }
+    }
+
+    return $diffQueries;
+}
+
+/**
+ * Helper to map columns: table => [column => type]
+ */
+private function mapColumns($columns)
+{
+    $map = [];
+    foreach ($columns as $col) {
+        $map[$col->TABLE_NAME][$col->COLUMN_NAME] = $col->COLUMN_TYPE;
+    }
+    return $map;
+}
+
 
     public function compareData($baseConnection, $targetConnection, $table)
     {
