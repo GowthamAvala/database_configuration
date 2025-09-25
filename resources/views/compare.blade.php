@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <table class="table table-bordered">
@@ -20,9 +21,9 @@
             <tr>
                 <th>{{ ucfirst(str_replace('db','',$row)) }}</th>
                 @foreach (['localdb','stagingdb','proddb'] as $col)
-                    <td class='align-center'>
+                    <td style='text-align:center;'>
                         @if($row === $col)
-                             Same
+                             No Change
                         @else
                             <button onclick="fetchDiff('{{ $row }}','{{ $col }}','schema')">Schema</button>
                             <button onclick="fetchDiff('{{ $row }}','{{ $col }}','data')">Data</button>
@@ -34,20 +35,25 @@
     </tbody>
 </table>
 
-
 <pre id="result"></pre>
 
 <script>
 function fetchDiff(base, target, type) {
-    let url = type === 'data'
-        ? `/schema-diff?base=${base}&target=${target}`
-        : `/data-diff?base=${base}&target=${target}&table=users`; // example
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('result').innerText = data.join("\n");
+        let url = type === 'schema'
+            ? `/schema-diff?base=${base}&target=${target}`
+            : `/data-diff?base=${base}&target=${target}&table=users`; 
+         $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                document.getElementById('result').innerText = data.join("\n");
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching diff:', error);
+            }
         });
-}
+    }
 </script>
 
 </body>
