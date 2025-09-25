@@ -9,3 +9,84 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+body {
+    background-color: #f8f9fa;
+}
+
+.db-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.db-card:hover {
+    transform: scale(1.03);
+}
+
+.compare-btn {
+    font-size: 0.85rem;
+}
+
+.db-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.section-header {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.icon {
+    margin-right: 5px;
+}
+
+.section-card {
+    padding: 0.5rem;
+    border-radius: 0.3rem;
+    background-color: #f1f1f1;
+    margin-bottom: 0.5rem;
+}
+
+.sql-box {
+    font-family: monospace;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+    border-left: 5px solid #6c757d;
+    padding: 8px;
+    text-align: left;
+}
+
+.insert {
+    border-left-color: #28a745;
+    background: #e9f9ed;
+}
+
+.update {
+    border-left-color: #ffc107;
+    background: #fff8e5;
+}
+
+.delete {
+    border-left-color: #dc3545;
+    background: #fce9e9;
+}
+
+.section-title {
+    font-size: 1.4rem;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+    color: #343a40;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.table-header {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: #0d6efd;
+    text-align: center;
+}
