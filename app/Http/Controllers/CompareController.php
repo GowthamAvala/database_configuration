@@ -9,6 +9,7 @@ class CompareController extends Controller
 {
     private $dbCompareService;
 
+    
     public function __construct(DatabaseCompareService $service)
     {
         $this->dbCompareService = $service;
