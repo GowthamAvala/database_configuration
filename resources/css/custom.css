@@ -1,0 +1,93 @@
+
+
+.card:hover {
+    transform: translateY(-8px);
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline-success:hover {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+@media (max-width: 576px) {
+    .d-flex.flex-column.flex-sm-row {
+        flex-direction: column !important;
+        text-align: center;
+    }
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f5f7fa;
+}
+
+h2 {
+    font-size: 2.5rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #0d6efd;
+}
+
+.table-header {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    color: #343a40;
+}
+
+.card {
+    border-radius: 1rem;
+}
+
+.sql-box {
+    font-family: 'Courier New', Courier, monospace;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: #f0f2f5;
+    word-break: break-word;
+}
+
+.sql-box.insert {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.sql-box.update {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+.sql-box.delete {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.alert-info {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    border-radius: 50px;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}

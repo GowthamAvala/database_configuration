@@ -141,31 +141,26 @@ class DatabaseCompareService
 
         foreach ($baseData as $key => $row) {
             $rowArray = (array) $row;
-
             if (!isset($targetData[$key])) {
-                // Row missing in target -> INSERT
                 $columns = implode('`,`', array_keys($rowArray));
-                $values = implode("','", array_map(fn($v) => addslashes($v), $rowArray));
+                $values  = implode("','", array_map(fn($v) => addslashes($v), $rowArray));
                 $queries[] = "INSERT INTO `$table` (`$columns`) VALUES ('$values');";
             } else {
-                // Row exists -> check for updates
                 $targetRowArray = (array) $targetData[$key];
                 $set = [];
                 foreach ($rowArray as $col => $val) {
-                    if (in_array($col, $ignoreColumns)) {
-                        continue; // skip ignored columns
-                    }
-                    if (!array_key_exists($col, $targetRowArray) || (string)$val !== (string)$targetRowArray[$col]) {
-                        $set[] = "`$col` = '" . addslashes($val) . "'";
+                    if (in_array($col,$ignoreColumns)) continue;
+                    if (!array_key_exists($col,$targetRowArray) || (string)$val !== (string)$targetRowArray[$col]) {
+                        $set[] = "`$col`='".addslashes($val)."'";
                     }
                 }
                 if (!empty($set)) {
-                    $queries[] = "UPDATE `$table` SET " . implode(', ', $set) . " WHERE $keyColumn = $key;";
+                    $queries[] = "UPDATE `$table` SET ".implode(', ',$set)." WHERE $keyColumn = $key;";
                 }
             }
         }
 
-        // Rows in target not in base -> DELETE
+        
         foreach ($targetData as $key => $row) {
             if (!isset($baseData[$key])) {
                 $queries[] = "DELETE FROM `$table` WHERE $keyColumn = $key;";
@@ -173,5 +168,12 @@ class DatabaseCompareService
         }
 
         return $queries;
+    }
+
+    
+    public function getAllTables($connection)
+    {
+        $tables = DB::connection($connection)->select("SHOW TABLES");
+        return array_map(fn($t) => array_values((array)$t)[0], $tables);
     }
 }
