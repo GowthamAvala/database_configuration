@@ -10,60 +10,121 @@
 </head>
 
 <body>
-    <div class="container py-5">
-        <h2 class="text-center fw-bold mb-4 text-primary">Database Comparison Result</h2>
+    <div class="container py-4">
+        <h2 class="text-center mb-4">
+            Database Comparison Result
+        </h2>
 
-        <div class="alert alert-info text-center fw-bold">
-            Comparing <span class="text-success">{{ $base }}</span> against <span
-                class="text-danger">{{ $target }}</span>
+        <div class="text-center mt-4">
+            <a href="{{ route('compare.download.pdf', ['base' => $base, 'target' => $target, 'type' => $type]) }}"
+                class="btn btn-danger" target="_blank">Download PDF</a>
+
+            <a href="{{ route('compare.download.excel', ['base' => $base, 'target' => $target, 'type' => $type]) }}"
+                class="btn btn-success" target="_blank">Download Excel</a>
         </div>
 
+
+
+
+        {{-- Show Schema Differences --}}
         @if ($type === 'schema')
-            <div class="section-title text-center"> Schema Differences</div>
-            @if (!empty($schemaDiff))
-                @foreach ($schemaDiff as $table => $queries)
-                    <div class="table-header">Table: {{ $table }}</div>
-                    <div class="card shadow-sm mb-3">
-                        <div class="card-body d-flex flex-column gap-2 p-3">
-                            @foreach ($queries as $line)
-                                <div class="sql-box update">{{ $line }}</div>
-                            @endforeach
-                        </div>
+            <div class="section-title text-center">Schema Differences</div>
+            @if ($schemaPaginator && $schemaPaginator->count())
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body d-flex flex-column gap-2 p-3">
+                        @foreach ($schemaPaginator as $line)
+                            <div class="sql-box update">{{ $line }}</div>
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
+
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $schemaPaginator->links('pagination::bootstrap-5') }}
+                </div>
             @else
-                <div class="text-center text-muted mt-3"> No schema differences found.</div>
-            @endif
-        @elseif($type === 'data')
-            <div class="section-title text-center"> Data Differences</div>
-            @if (!empty($dataDiff))
-                @foreach ($dataDiff as $table => $queries)
-                    <div class="table-header">Table: {{ $table }}</div>
-                    <div class="card shadow-sm mb-3">
-                        <div class="card-body d-flex flex-column gap-2 p-3">
-                            @foreach ($queries as $line)
-                                @php
-                                    $lineType = 'normal';
-                                    if (str_starts_with($line, 'INSERT')) {
-                                        $lineType = 'insert';
-                                    } elseif (str_starts_with($line, 'UPDATE')) {
-                                        $lineType = 'update';
-                                    } elseif (str_starts_with($line, 'DELETE')) {
-                                        $lineType = 'delete';
-                                    }
-                                @endphp
-                                <div class="sql-box {{ $lineType }}">{{ $line }}</div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-            @else
-                <div class="text-center text-muted mt-3"> No data differences found.</div>
+                <div class="text-center text-muted mt-3">No schema differences found.</div>
             @endif
         @endif
 
-        <div class="text-center mt-5">
-            <a href="/" class="btn btn-primary"> Back to Dashboard</a>
+        {{-- Show Data Differences --}}
+        @if ($type === 'data')
+            <div class="section-title text-center">Data Differences</div>
+            @if ($dataPaginator && $dataPaginator->count())
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body d-flex flex-column gap-2 p-3">
+                        @foreach ($dataPaginator as $line)
+                            @php
+                                $lineType = 'normal';
+                                if (str_starts_with($line, 'INSERT')) {
+                                    $lineType = 'insert';
+                                } elseif (str_starts_with($line, 'UPDATE')) {
+                                    $lineType = 'update';
+                                } elseif (str_starts_with($line, 'DELETE')) {
+                                    $lineType = 'delete';
+                                }
+                            @endphp
+                            <div class="sql-box {{ $lineType }}">{{ $line }}</div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $dataPaginator->links('pagination::bootstrap-5') }}
+                </div>
+            @else
+                <div class="text-center text-muted mt-3">No data differences found.</div>
+            @endif
+        @endif
+
+        {{-- If type is null, show both schema + data --}}
+        @if ($type === null)
+            <div class="section-title text-center">Schema Differences</div>
+            @if ($schemaPaginator && $schemaPaginator->count())
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body d-flex flex-column gap-2 p-3">
+                        @foreach ($schemaPaginator as $line)
+                            <div class="sql-box update">{{ $line }}</div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $schemaPaginator->links('pagination::bootstrap-5') }}
+                </div>
+            @else
+                <div class="text-center text-muted mt-3">No schema differences found.</div>
+            @endif
+
+            <div class="section-title text-center">Data Differences</div>
+            @if ($dataPaginator && $dataPaginator->count())
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body d-flex flex-column gap-2 p-3">
+                        @foreach ($dataPaginator as $line)
+                            @php
+                                $lineType = 'normal';
+                                if (str_starts_with($line, 'INSERT')) {
+                                    $lineType = 'insert';
+                                } elseif (str_starts_with($line, 'UPDATE')) {
+                                    $lineType = 'update';
+                                } elseif (str_starts_with($line, 'DELETE')) {
+                                    $lineType = 'delete';
+                                }
+                            @endphp
+                            <div class="sql-box {{ $lineType }}">{{ $line }}</div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $dataPaginator->links('pagination::bootstrap-5') }}
+                </div>
+            @else
+                <div class="text-center text-muted mt-3">No data differences found.</div>
+            @endif
+        @endif
+
+        <div class="text-center mt-4">
+            <a href="{{ url()->previous() }}" class="btn btn-secondary">⬅ Back</a>
         </div>
     </div>
 </body>

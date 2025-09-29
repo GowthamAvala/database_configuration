@@ -1,5 +1,3 @@
-
-
 .card:hover {
     transform: translateY(-8px);
     transition: all 0.3s ease;
@@ -90,4 +88,38 @@ h2 {
 
 .btn-primary:hover {
     background-color: #0b5ed7;
+}
+
+body {
+    background-color: #f8f9fa;
+}
+
+.sql-box {
+    font-family: monospace;
+    background: #f1f1f1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    word-break: break-all;
+}
+
+.sql-box.insert {
+    border-left: 5px solid #28a745;
+    background: #e9f9ef;
+}
+
+.sql-box.update {
+    border-left: 5px solid #ffc107;
+    background: #fff8e5;
+}
+
+.sql-box.delete {
+    border-left: 5px solid #dc3545;
+    background: #fdeaea;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 20px 0 10px;
 }
