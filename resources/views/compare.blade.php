@@ -17,6 +17,24 @@
             <p class="text-muted fs-5">Compare schema and data between Local, Staging, and Production databases</p>
         </div>
 
+        <!-- ERROR ALERTS -->
+        @if (session('error'))
+            <div class="alert alert-warning alert-dismissible fade show text-center mx-auto w-75" role="alert">
+                <strong>Error:</strong> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <!-- Error Messages -->
+        @if (!empty($errors) && is_array($errors))
+            @foreach ($errors as $error)
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Error:</strong> {{ $error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endforeach
+        @endif
+
         <div class="row g-4 justify-content-center">
             @foreach (['localdb' => 'Local', 'stagingdb' => 'Staging', 'proddb' => 'Production'] as $rowKey => $rowLabel)
                 <div class="col-lg-4 col-md-6">
@@ -56,13 +74,6 @@
         }
     </script>
 
-
-
-    <script>
-        function openCompare(base, target, type) {
-            window.open(`/compare-result?base=${base}&target=${target}&type=${type}`, '_blank');
-        }
-    </script>
 </body>
 
 </html>

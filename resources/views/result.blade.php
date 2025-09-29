@@ -22,15 +22,48 @@
             <a href="{{ route('compare.download.excel', ['base' => $base, 'target' => $target, 'type' => $type]) }}"
                 class="btn btn-success" target="_blank">Download Excel</a>
         </div>
+        <div class="container">
+            <!-- Session Messages -->
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {!! session('error') !!}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 
+            @if(session('warning'))
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {!! session('warning') !!}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 
+        </div>
 
+        <!-- ERROR ALERTS -->
+        @if (session('error'))
+            <div class="alert alert-warning alert-dismissible fade show text-center mx-auto w-75" role="alert">
+                <strong>Error:</strong> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        <!-- Error Messages -->
+        @if (!empty($errors) && is_array($errors))
+            @foreach ($errors as $error)
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Error:</strong> {{ $error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endforeach
+        @endif
 
         {{-- Show Schema Differences --}}
         @if ($type === 'schema')
             <div class="section-title text-center">Schema Differences</div>
             @if ($schemaPaginator && $schemaPaginator->count())
+            <p class='ms-4'>Run query in target database: <strong>{{ $target }}</strong></p>
                 <div class="card shadow-sm mb-3">
+                   
                     <div class="card-body d-flex flex-column gap-2 p-3">
                         @foreach ($schemaPaginator as $line)
                             <div class="sql-box update">{{ $line }}</div>
@@ -50,6 +83,7 @@
         @if ($type === 'data')
             <div class="section-title text-center">Data Differences</div>
             @if ($dataPaginator && $dataPaginator->count())
+            <p class='ms-4'>Run query in target database: <strong>{{ $target }}</strong></p>
                 <div class="card shadow-sm mb-3">
                     <div class="card-body d-flex flex-column gap-2 p-3">
                         @foreach ($dataPaginator as $line)

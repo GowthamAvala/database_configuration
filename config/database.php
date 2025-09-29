@@ -41,10 +41,10 @@ return [
 
         'stagingdb' => [
             'driver' => 'mysql',
-            'host' => env('DB_STAGING_HOST', '127.0.0.1'),
-            'database' => env('DB_STAGING_DATABASE', 'stagingdb'),
-            'username' => env('DB_STAGING_USERNAME', 'root'),
-            'password' => env('DB_STAGING_PASSWORD', ''),
+            'host' => env('DB_STAGE_HOST', '127.0.0.1'),
+            'database' => env('DB_STAGE_DATABASE', 'stagingdb'),
+            'username' => env('DB_STAGE_USERNAME', 'root'),
+            'password' => env('DB_STAGE_PASSWORD', ''),
         ],
 
         'proddb' => [

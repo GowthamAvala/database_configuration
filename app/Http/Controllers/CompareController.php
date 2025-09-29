@@ -6,6 +6,7 @@ use App\Services\DatabaseCompareService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel; 
 // Import the new Export class (assuming it's in app/Exports)
 use App\Exports\ComparisonExport;
@@ -25,32 +26,76 @@ class CompareController extends Controller
     {
         $base   = $request->get('base');
         $target = $request->get('target');
-        $type   = $request->get('type'); 
+        $type   = $request->get('type');
+
+        $schemaDiff = [];
+        $dataDiff   = [];
+        $errors     = [];
 
         try {
-            [$schemaDiff, $dataDiff] = $this->getAllDiffs($base, $target, $type);
+            // Fetch tables from base
+            $baseTables = DB::connection($base)->select("SHOW TABLES");
+            $baseTables = array_map(fn($t) => array_values((array)$t)[0], $baseTables);
 
-            // Pagination setup
-            $perPage = 20;
-            $page = request()->get('page', 1);
+            // Fetch tables from target
+            $targetTables = DB::connection($target)->select("SHOW TABLES");
+            $targetTables = array_map(fn($t) => array_values((array)$t)[0], $targetTables);
 
-            $schemaPaginator = $this->paginateCollection($schemaDiff, $page, $perPage);
-            $dataPaginator   = $this->paginateCollection($dataDiff, $page, $perPage);
-
-            return view('result', [
-                'base'            => $base,
-                'target'          => $target,
-                'type'            => $type,  
-                'schemaPaginator' => $schemaPaginator,
-                'dataPaginator'   => $dataPaginator
-            ]);
-
+            // Union of both sets of tables
+            $tables = array_unique(array_merge($baseTables, $targetTables));
         } catch (\Exception $e) {
-            // Include logging for better debugging in a real application
-            // \Log::error("Database comparison failed: " . $e->getMessage(), ['base' => $base, 'target' => $target]);
-            return back()->with('error', '⚠️ Failed to fetch comparison: ' . $e->getMessage());
+            Log::error("Failed to fetch tables: " . $e->getMessage());
+            session()->flash('error', $e->getMessage());
+            return back();  
         }
+
+        foreach ($tables as $table) {
+            // Compare schema safely
+            if ($type === 'schema' || $type === null) {
+                try {
+                    $sDiff = $this->dbCompareService->compareSchemas($base, $target, [$table]);
+                    if (!empty($sDiff)) {
+                        $schemaDiff[$table] = $sDiff;
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("Schema comparison failed for table $table: " . $e->getMessage());
+                    $errors[] = "Schema comparison failed for <strong>$table</strong>: " . $e->getMessage();
+                }
+            }
+
+            // Compare data safely
+            if ($type === 'data' || $type === null) {
+                try {
+                    $dDiff = $this->dbCompareService->compareData($base, $target, $table);
+                    if (!empty($dDiff)) {
+                        $dataDiff[$table] = $dDiff;
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("Data comparison failed for table $table: " . $e->getMessage());
+                    $errors[] = "No Data comparison for <strong>$table</strong>: " . $e->getMessage();
+                }
+            }
+        }
+
+        //  Pagination setup (colleague's feature)
+        $perPage = 20;
+        $page = request()->get('page', 1);
+
+        $schemaPaginator = $this->paginateCollection($schemaDiff, $page, $perPage);
+        $dataPaginator   = $this->paginateCollection($dataDiff, $page, $perPage);
+
+        return view('result', [
+            'base'            => $base,
+            'target'          => $target,
+            'type'            => $type,
+            'schemaDiff'      => $schemaDiff,   
+            'dataDiff'        => $dataDiff,
+            'schemaPaginator' => $schemaPaginator,
+            'dataPaginator'   => $dataPaginator,
+            'errors'          => $errors
+        ]);
     }
+
 
     public function downloadPdf(Request $request)
     {
@@ -61,7 +106,7 @@ class CompareController extends Controller
         try {
             [$schemaDiff, $dataDiff] = $this->getAllDiffs($base, $target, $type);
         } catch (\Exception $e) {
-            return back()->with('error', '⚠️ Failed to fetch data for PDF: ' . $e->getMessage());
+            return back()->with('error', ' Failed to fetch data for PDF: ' . $e->getMessage());
         }
 
 
@@ -88,7 +133,7 @@ class CompareController extends Controller
         try {
             [$schemaDiff, $dataDiff] = $this->getAllDiffs($base, $target, $type);
         } catch (\Exception $e) {
-            return back()->with('error', '⚠️ Failed to fetch data for Excel: ' . $e->getMessage());
+            return back()->with('error', ' Failed to fetch data for Excel: ' . $e->getMessage());
         }
 
         $exportData = [];
