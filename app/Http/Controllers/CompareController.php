@@ -83,6 +83,7 @@ class CompareController extends Controller
 
         $schemaPaginator = $this->paginateCollection($schemaDiff, $page, $perPage);
         $dataPaginator   = $this->paginateCollection($dataDiff, $page, $perPage);
+        $totalRecords = collect($schemaDiff)->flatten()->count() + collect($dataDiff)->flatten()->count();
 
         return view('result', [
             'base'            => $base,
@@ -92,7 +93,8 @@ class CompareController extends Controller
             'dataDiff'        => $dataDiff,
             'schemaPaginator' => $schemaPaginator,
             'dataPaginator'   => $dataPaginator,
-            'errors'          => $errors
+            'errors'          => $errors,
+            'totalRecords'    => $totalRecords
         ]);
     }
 
@@ -129,42 +131,20 @@ class CompareController extends Controller
         $base   = $request->get('base');
         $target = $request->get('target');
         $type   = $request->get('type');
-
+ 
         try {
             [$schemaDiff, $dataDiff] = $this->getAllDiffs($base, $target, $type);
         } catch (\Exception $e) {
-            return back()->with('error', ' Failed to fetch data for Excel: ' . $e->getMessage());
+            return back()->with('error', '⚠️ Failed to fetch data for Excel: ' . $e->getMessage());
         }
-
-        $exportData = [];
-
-        // Collect Schema differences
-        if ($type === 'schema' || $type === null) {
-            foreach ($schemaDiff as $table => $queries) {
-                // $queries is expected to be an array of SQL strings
-                foreach ($queries as $query) {
-                    // Structure: [Type, Table, Query]
-                    $exportData[] = ['Schema', $table, $query];
-                }
-            }
-        }
-
-        // Collect Data differences
-        if ($type === 'data' || $type === null) {
-            foreach ($dataDiff as $table => $queries) {
-                // $queries is expected to be an array of SQL strings (INSERT/UPDATE/DELETE)
-                foreach ($queries as $query) {
-                    // Structure: [Type, Table, Query]
-                    $exportData[] = ['Data', $table, $query];
-                }
-            }
-        }
-        
-        // Use the modern Maatwebsite Excel 3.1+ API
-        $filename = "comparison_result_{$base}_vs_{$target}.xlsx";
-        
-        // Instantiate the Export class with the prepared data and use the download facade
-        return Excel::download(new ComparisonExport($exportData), $filename);
+ 
+        $filename = "comparison_result_{$base}_vs_{$target}.csv";
+ 
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ComparisonExport($schemaDiff, $dataDiff, $type),
+            $filename,
+            \Maatwebsite\Excel\Excel::CSV
+        );
     }
 
 

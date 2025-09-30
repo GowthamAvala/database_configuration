@@ -1,55 +1,51 @@
 <?php
-
+ 
 namespace App\Exports;
-
-use Maatwebsite\Excel\Concerns\FromArray;
+ 
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-
-/**
- * Exports the schema and data differences as a structured array to Excel.
- * This class handles passing the data and defining the header row.
- */
-class ComparisonExport implements FromArray, WithHeadings
+ 
+class ComparisonExport implements FromCollection, WithHeadings
 {
-    /**
-     * @var array
-     */
-    protected $exportData;
-
-    /**
-     * The constructor receives the collected difference data from the controller.
-     *
-     * @param array $exportData
-     */
-    public function __construct(array $exportData)
+    protected $schemaDiff;
+    protected $dataDiff;
+    protected $type;
+ 
+    public function __construct($schemaDiff, $dataDiff, $type)
     {
-        // The data array passed from the CompareController
-        $this->exportData = $exportData;
+        $this->schemaDiff = $schemaDiff;
+        $this->dataDiff   = $dataDiff;
+        $this->type       = $type;
     }
-
-    /**
-     * Returns the data array for the sheet content (the body of the Excel file).
-     * This is required by the FromArray concern.
-     *
-     * @return array
-     */
-    public function array(): array
+ 
+    public function collection()
     {
-        return $this->exportData;
+        $rows = [];
+ 
+        // Schema differences
+        if ($this->type === 'schema' || $this->type === null) {
+            foreach ($this->schemaDiff as $table => $queries) {
+                foreach ($queries as $query) {
+                    $rows[] = ['Schema', $table, $query];
+                }
+            }
+        }
+ 
+        // Data differences
+        if ($this->type === 'data' || $this->type === null) {
+            foreach ($this->dataDiff as $table => $queries) {
+                foreach ($queries as $query) {
+                    $rows[] = ['Data', $table, $query];
+                }
+            }
+        }
+ 
+        return new Collection($rows);
     }
-
-    /**
-     * Defines the column headings for the Excel file.
-     * This is required by the WithHeadings concern.
-     *
-     * @return array
-     */
+ 
     public function headings(): array
     {
-        return [
-            'Type',
-            'Table',
-            'Query / Description'
-        ];
+        return ['Type', 'Table', 'Query / Description'];
     }
 }
