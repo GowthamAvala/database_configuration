@@ -131,21 +131,22 @@ class CompareController extends Controller
         $base   = $request->get('base');
         $target = $request->get('target');
         $type   = $request->get('type');
- 
+
         try {
             [$schemaDiff, $dataDiff] = $this->getAllDiffs($base, $target, $type);
         } catch (\Exception $e) {
             return back()->with('error', '⚠️ Failed to fetch data for Excel: ' . $e->getMessage());
         }
- 
-        $filename = "comparison_result_{$base}_vs_{$target}.csv";
- 
+
+        $filename = "comparison_result_{$base}_vs_{$target}.xlsx"; // Keep .xlsx
+
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\ComparisonExport($schemaDiff, $dataDiff, $type),
             $filename,
-            \Maatwebsite\Excel\Excel::CSV
+            \Maatwebsite\Excel\Excel::XLSX // Export as Excel format
         );
     }
+
 
 
     /**
@@ -203,4 +204,54 @@ class CompareController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
     }
+
+    public function downloadSql(Request $request)
+    {
+        $base   = $request->get('base');
+        $target = $request->get('target');
+        $type   = $request->get('type');
+
+        try {
+            [$schemaDiff, $dataDiff] = $this->getAllDiffs($base, $target, $type);
+        } catch (\Exception $e) {
+            return back()->with('error', '⚠️ Failed to fetch data for SQL: ' . $e->getMessage());
+        }
+
+        // Add message at the top of the SQL file
+        $allQueries  = "-- ==================================================\n";
+        $allQueries .= "-- Database Comparison Result\n";
+        $allQueries .= "-- Base DB   : {$base}\n";
+        $allQueries .= "-- Target DB : {$target}\n";
+        $allQueries .= "-- Generated : " . now()->toDateTimeString() . "\n";
+        $allQueries .= "-- Note: Execute these queries on the TARGET database.\n";
+        $allQueries .= "-- ==================================================\n\n";
+
+        if (!empty($schemaDiff)) {
+            $allQueries .= "-- Schema Differences\n";
+            foreach ($schemaDiff as $table => $queries) {
+                foreach ($queries as $query) {
+                    $allQueries .= $query . ";\n";
+                }
+            }
+            $allQueries .= "\n";
+        }
+
+        if (!empty($dataDiff)) {
+            $allQueries .= "-- Data Differences\n";
+            foreach ($dataDiff as $table => $queries) {
+                foreach ($queries as $query) {
+                    $allQueries .= $query . ";\n";
+                }
+            }
+        }
+
+        $filename = "comparison_result_{$base}_vs_{$target}.sql";
+
+        return response($allQueries)
+            ->header('Content-Type', 'application/sql')
+            ->header('Content-Disposition', "attachment; filename={$filename}");
+    }
+
+
+
 }

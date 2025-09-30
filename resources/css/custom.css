@@ -51,28 +51,16 @@ h2 {
     border-radius: 1rem;
 }
 
-.sql-box {
-    font-family: 'Courier New', Courier, monospace;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    background-color: #f0f2f5;
-    word-break: break-word;
-}
 
-.sql-box.insert {
-    background-color: #d1e7dd;
-    color: #0f5132;
-}
+
+
 
 .sql-box.update {
-    background-color: #fff3cd;
-    color: #664d03;
+    background-color: #ceccd3;
+    color:#a5040c;
 }
 
-.sql-box.delete {
-    background-color: #f8d7da;
-    color: #842029;
-}
+
 
 .alert-info {
     font-weight: 600;
@@ -86,13 +74,7 @@ h2 {
     font-weight: 500;
 }
 
-.btn-primary:hover {
-    background-color: #0b5ed7;
-}
 
-body {
-    background-color: #f8f9fa;
-}
 
 .sql-box {
     font-family: monospace;
@@ -103,23 +85,3 @@ body {
     word-break: break-all;
 }
 
-.sql-box.insert {
-    border-left: 5px solid #28a745;
-    background: #e9f9ef;
-}
-
-.sql-box.update {
-    border-left: 5px solid #ffc107;
-    background: #fff8e5;
-}
-
-.sql-box.delete {
-    border-left: 5px solid #dc3545;
-    background: #fdeaea;
-}
-
-.section-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 20px 0 10px;
-}
